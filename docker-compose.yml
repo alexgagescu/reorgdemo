@@ -1,0 +1,90 @@
+version: '3'
+services:
+  #PHP Services
+  service1:
+    build:
+      context: .
+      dockerfile: service1/Dockerfile
+    image: reorg-service-1
+    container_name: service1
+    restart: unless-stopped
+    tty: true
+    working_dir: /var/www/service1
+    volumes:
+      - ./service1:/var/www/service1
+      - ./configs/apps/service1.env:/var/www/service1/.env
+    networks:
+      - reorg
+
+  service2:
+    build:
+      context: .
+      dockerfile: service2/Dockerfile
+    image: reorg-service-2
+    container_name: service2
+    restart: unless-stopped
+    tty: true
+    working_dir: /var/www/service2
+    volumes:
+      - ./service2:/var/www/service2
+      - ./configs/apps/service2.env:/var/www/service2/.env
+    networks:
+      - reorg
+
+  service3:
+    build:
+      context: .
+      dockerfile: service3/Dockerfile
+    image: reorg-service-3
+    container_name: service3
+    restart: unless-stopped
+    tty: true
+    working_dir: /var/www/service3
+    volumes:
+      - ./service3:/var/www/service3
+      - ./configs/apps/service3.env:/var/www/service3/.env
+    networks:
+      - reorg
+
+  #Nginx Service
+  web:
+    image: nginx:latest
+    container_name: web
+    restart: unless-stopped
+    tty: true
+    volumes:
+      - ./service1:/var/www/service1
+      - ./service2:/var/www/service2
+      - ./service3:/var/www/service3
+      - ./configs/nginx:/etc/nginx/conf.d/
+    ports:
+      - "8080:80"
+      - "8081:81"
+      - "8082:82"
+    networks:
+      - reorg
+
+  #MySQL Service
+  database:
+    image: mysql:5.7.22
+    container_name: database
+    restart: unless-stopped
+    tty: true
+    ports:
+      - "3306:3306"
+    environment:
+      MYSQL_DATABASE: laravel
+      MYSQL_ROOT_PASSWORD: secret
+    volumes:
+      - ./dbdata:/var/lib/mysql
+    networks:
+      - reorg
+
+#Docker Networks
+networks:
+  reorg:
+    name: reorg
+    ipam:
+      driver: default
+      config:
+        - subnet: 10.10.0.0/24
